@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 class="mb-4">지출 관리</h1>
+
+<div class="card mb-4">
+    <div class="card-header">지출 항목 추가</div>
+    <div class="card-body">
+        <form method="post">
+            <div class="mb-3">
+                <label class="form-label">항목 (예: 웨딩홀, 스드메, 식대 등)</label>
+                <input type="text" name="category" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">설명 / 메모 (선택)</label>
+                <input type="text" name="description" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">금액 (원)</label>
+                <input type="number" name="amount" class="form-control" min="0" required>
+            </div>
+            <button type="submit" class="btn btn-primary">추가</button>
+        </form>
+    </div>
+</div>
+
+<h4>총 지출: {{ "{:,}".format(total_expense) }} 원</h4>
+
+<table class="table table-striped mt-3">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>항목</th>
+            <th>설명</th>
+            <th>금액(원)</th>
+            <th>삭제</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for expense in expenses %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ expense.category }}</td>
+                <td>{{ expense.description }}</td>
+                <td>{{ "{:,}".format(expense.amount) }}</td>
+                <td>
+                    <form method="post" action="{{ url_for('delete_expense', expense_id=expense.id) }}"
+                          onsubmit="return confirm('정말 삭제할까요?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">삭제</button>
+                    </form>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="5" class="text-center">등록된 지출이 없습니다.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

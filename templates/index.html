@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 class="mb-4">대시보드</h1>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-bg-success mb-3">
+            <div class="card-header">총 축의금 (수입)</div>
+            <div class="card-body">
+                <h3 class="card-title">{{ "{:,}".format(total_income) }} 원</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-bg-danger mb-3">
+            <div class="card-header">총 예식 비용 (지출)</div>
+            <div class="card-body">
+                <h3 class="card-title">{{ "{:,}".format(total_expense) }} 원</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-bg-primary mb-3">
+            <div class="card-header">최종 손익</div>
+            <div class="card-body">
+                <h3 class="card-title">
+                    {% if net_profit >= 0 %}
+                        +{{ "{:,}".format(net_profit) }} 원
+                    {% else %}
+                        -{{ "{:,}".format(net_profit|abs) }} 원
+                    {% endif %}
+                </h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- 수입 vs 지출 -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">총 수입 vs 총 지출</div>
+            <div class="card-body">
+                <canvas id="incomeExpenseChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- 신랑 vs 신부 축의금 -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">신랑측 vs 신부측 축의금</div>
+            <div class="card-body">
+                <canvas id="brideGroomChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- 지출 항목별 비중 -->
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header">지출 항목별 비중</div>
+            <div class="card-body">
+                <canvas id="expensePieChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // 파이썬에서 넘긴 데이터
+    const totalIncome = {{ total_income }};
+    const totalExpense = {{ total_expense }};
+    const groomTotal = {{ groom_total }};
+    const brideTotal = {{ bride_total }};
+    const expenseLabels = {{ expense_labels | tojson }};
+    const expenseValues = {{ expense_values | tojson }};
+
+    // 1. 총 수입 vs 총 지출 차트
+    const ctx1 = document.getElementById('incomeExpenseChart').getContext('2d');
+    new Chart(ctx1, {
+        type: 'bar',
+        data: {
+            labels: ['수입', '지출'],
+            datasets: [{
+                label: '금액(원)',
+                data: [totalIncome, totalExpense]
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // 2. 신랑측 vs 신부측 축의금
+    const ctx2 = document.getElementById('brideGroomChart').getContext('2d');
+    new Chart(ctx2, {
+        type: 'pie',
+        data: {
+            labels: ['신랑측', '신부측'],
+            datasets: [{
+                data: [groomTotal, brideTotal]
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+
+    // 3. 지출 항목별 비중
+    const ctx3 = document.getElementById('expensePieChart').getContext('2d');
+    new Chart(ctx3, {
+        type: 'doughnut',
+        data: {
+            labels: expenseLabels,
+            datasets: [{
+                data: expenseValues
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+</script>
+{% endblock %}

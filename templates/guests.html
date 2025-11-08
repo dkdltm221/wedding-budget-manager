@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 class="mb-4">축의금 관리</h1>
+
+<div class="card mb-4">
+    <div class="card-header">축의금 입력</div>
+    <div class="card-body">
+        <form method="post">
+            <div class="mb-3">
+                <label class="form-label">이름</label>
+                <input type="text" name="name" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">소속</label>
+                <select name="side" class="form-select" required>
+                    <option value="">선택...</option>
+                    <option value="groom">신랑측</option>
+                    <option value="bride">신부측</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">축의금 금액 (원)</label>
+                <input type="number" name="amount" class="form-control" min="0" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">관계 / 메모 (선택)</label>
+                <input type="text" name="note" class="form-control">
+            </div>
+
+            <button type="submit" class="btn btn-primary">추가</button>
+        </form>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">이름으로 검색</div>
+    <div class="card-body">
+        <form method="get">
+            <div class="input-group">
+                <input type="text" name="search_name" class="form-control"
+                       placeholder="이름 검색" value="{{ search_name }}">
+                <button class="btn btn-outline-secondary" type="submit">검색</button>
+                <a href="{{ url_for('guests') }}" class="btn btn-outline-danger">초기화</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <!-- 신랑측 -->
+    <div class="col-md-6 mb-4">
+        <h4>신랑측 (총 {{ "{:,}".format(groom_total) }} 원)</h4>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>이름</th>
+                    <th>금액(원)</th>
+                    <th>메모</th>
+                    <th>삭제</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for guest in groom_guests %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ guest.name }}</td>
+                        <td>{{ "{:,}".format(guest.amount) }}</td>
+                        <td>{{ guest.note }}</td>
+                        <td>
+                            <form method="post" action="{{ url_for('delete_guest', guest_id=guest.id) }}"
+                                  onsubmit="return confirm('정말 삭제할까요?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">삭제</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center">등록된 신랑측 축의금이 없습니다.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 신부측 -->
+    <div class="col-md-6 mb-4">
+        <h4>신부측 (총 {{ "{:,}".format(bride_total) }} 원)</h4>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>이름</th>
+                    <th>금액(원)</th>
+                    <th>메모</th>
+                    <th>삭제</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for guest in bride_guests %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ guest.name }}</td>
+                        <td>{{ "{:,}".format(guest.amount) }}</td>
+                        <td>{{ guest.note }}</td>
+                        <td>
+                            <form method="post" action="{{ url_for('delete_guest', guest_id=guest.id) }}"
+                                  onsubmit="return confirm('정말 삭제할까요?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">삭제</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center">등록된 신부측 축의금이 없습니다.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
