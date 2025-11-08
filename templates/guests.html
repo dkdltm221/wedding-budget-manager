@@ -44,7 +44,7 @@
                 <input type="text" name="search_name" class="form-control"
                        placeholder="이름 검색" value="{{ search_name }}">
                 <button class="btn btn-outline-secondary" type="submit">검색</button>
-                <a href="{{ url_for('guests') }}" class="btn btn-outline-danger">초기화</a>
+                <a href="{{ url_for('guests.list_guests') }}" class="btn btn-outline-danger">초기화</a>
             </div>
         </form>
     </div>
@@ -72,7 +72,7 @@
                         <td>{{ "{:,}".format(guest.amount) }}</td>
                         <td>{{ guest.note }}</td>
                         <td>
-                            <form method="post" action="{{ url_for('delete_guest', guest_id=guest.id) }}"
+                            <form method="post" action="{{ url_for('guests.delete_guest', guest_id=guest.id) }}"
                                   onsubmit="return confirm('정말 삭제할까요?');">
                                 <button type="submit" class="btn btn-sm btn-outline-danger">삭제</button>
                             </form>
@@ -108,7 +108,7 @@
                         <td>{{ "{:,}".format(guest.amount) }}</td>
                         <td>{{ guest.note }}</td>
                         <td>
-                            <form method="post" action="{{ url_for('delete_guest', guest_id=guest.id) }}"
+                            <form method="post" action="{{ url_for('guests.delete_guest', guest_id=guest.id) }}"
                                   onsubmit="return confirm('정말 삭제할까요?');">
                                 <button type="submit" class="btn btn-sm btn-outline-danger">삭제</button>
                             </form>
