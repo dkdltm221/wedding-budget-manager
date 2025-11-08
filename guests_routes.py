@@ -1,10 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
+from sqlalchemy import func, case
 from models import db, Guest
 
 guests_bp = Blueprint('guests', __name__)
 
-@guests_bp.route('/guests', methods=['GET', 'POST'])
-def guests():
+@guests_bp.route('/', methods=['GET', 'POST'])
+def list_guests():
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
         side = request.form.get('side', '').strip()
@@ -20,20 +21,33 @@ def guests():
                 db.session.add(new_guest)
                 db.session.commit()
                 flash('축의금이 추가되었습니다.', 'success')
-                return redirect(url_for('guests.guests'))
+                return redirect(url_for('guests.list_guests'))
             except ValueError:
                 flash('금액은 숫자로 입력해주세요.', 'danger')
 
     search_name = request.args.get('search_name', '').strip()
-    base_query = Guest.query
+
+    # 각 쿼리를 독립적으로 생성
+    groom_query = Guest.query.filter(Guest.side == 'groom')
+    bride_query = Guest.query.filter(Guest.side == 'bride')
+    totals_query = db.session.query(
+        func.coalesce(func.sum(case((Guest.side == 'groom', Guest.amount), else_=0)), 0).label('groom_total'),
+        func.coalesce(func.sum(case((Guest.side == 'bride', Guest.amount), else_=0)), 0).label('bride_total')
+    )
+
     if search_name:
-        base_query = base_query.filter(Guest.name.contains(search_name))
+        search_filter = Guest.name.contains(search_name)
+        groom_query = groom_query.filter(search_filter)
+        bride_query = bride_query.filter(search_filter)
+        totals_query = totals_query.filter(search_filter)
 
-    groom_guests = base_query.filter(Guest.side == 'groom').order_by(Guest.id.desc()).all()
-    bride_guests = base_query.filter(Guest.side == 'bride').order_by(Guest.id.desc()).all()
+    groom_guests = groom_query.order_by(Guest.id.desc()).all()
+    bride_guests = bride_query.order_by(Guest.id.desc()).all()
+    totals = totals_query.first()
 
-    groom_total = sum(g.amount for g in groom_guests)
-    bride_total = sum(b.amount for b in bride_guests)
+    groom_total = totals.groom_total or 0
+    bride_total = totals.bride_total or 0
+
 
     return render_template(
         'guests.html',
@@ -45,10 +59,10 @@ def guests():
     )
 
 
-@guests_bp.route('/guests/<int:guest_id>/delete', methods=['POST'])
+@guests_bp.route('/<int:guest_id>/delete', methods=['POST'])
 def delete_guest(guest_id):
     guest = Guest.query.get_or_404(guest_id)
     db.session.delete(guest)
     db.session.commit()
     flash('축의금 항목이 삭제되었습니다.', 'info')
-    return redirect(url_for('guests.guests'))
+    return redirect(url_for('guests.list_guests'))
