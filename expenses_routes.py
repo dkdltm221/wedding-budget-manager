@@ -2,10 +2,12 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from sqlalchemy import func
 from models import db, Expense
 
-expenses_bp = Blueprint('expenses', __name__)
+expenses_bp = Blueprint('expenses', __name__, url_prefix='/expenses')
+
 
 @expenses_bp.route('/', methods=['GET', 'POST'])
 def list_expenses():
+    # 지출 추가
     if request.method == 'POST':
         category = request.form.get('category', '').strip()
         description = request.form.get('description', '').strip()
@@ -16,18 +18,65 @@ def list_expenses():
         else:
             try:
                 amount_value = int(amount)
-                new_expense = Expense(category=category, description=description, amount=amount_value)
+                if amount_value < 0:
+                    raise ValueError
+                new_expense = Expense(
+                    category=category,
+                    description=description,
+                    amount=amount_value
+                )
                 db.session.add(new_expense)
                 db.session.commit()
                 flash('지출 항목이 추가되었습니다.', 'success')
                 return redirect(url_for('expenses.list_expenses'))
             except ValueError:
-                flash('금액은 숫자로 입력해주세요.', 'danger')
+                flash('금액은 0 이상의 숫자로 입력해주세요.', 'danger')
 
+    # 목록 + 총합 조회
     expenses_list = Expense.query.order_by(Expense.id.desc()).all()
-    total_expense = db.session.query(func.coalesce(func.sum(Expense.amount), 0)).scalar()
+    total_expense = db.session.query(
+        func.coalesce(func.sum(Expense.amount), 0)
+    ).scalar()
 
-    return render_template('expenses.html', expenses=expenses_list, total_expense=total_expense)
+    return render_template(
+        'expenses.html',
+        expenses=expenses_list,
+        total_expense=total_expense
+    )
+
+
+@expenses_bp.route('/<int:expense_id>/edit', methods=['GET', 'POST'])
+def edit_expense(expense_id):
+    expense = Expense.query.get_or_404(expense_id)
+
+    if request.method == 'POST':
+        category = request.form.get('category', '').strip()
+        description = request.form.get('description', '').strip()
+        amount = request.form.get('amount', '').strip()
+
+        if not category or not amount:
+            flash('항목과 금액은 필수입니다.', 'danger')
+            return redirect(url_for('expenses.edit_expense', expense_id=expense.id))
+
+        try:
+            amount_value = int(amount)
+            if amount_value < 0:
+                raise ValueError
+
+            expense.category = category
+            expense.description = description
+            expense.amount = amount_value
+
+            db.session.commit()
+            flash('지출 항목이 수정되었습니다.', 'success')
+            return redirect(url_for('expenses.list_expenses'))
+
+        except ValueError:
+            flash('금액은 0 이상의 숫자로 입력해주세요.', 'danger')
+            return redirect(url_for('expenses.edit_expense', expense_id=expense.id))
+
+    # GET 요청: 수정 화면 렌더링
+    return render_template('expenses_edit.html', expense=expense)
 
 
 @expenses_bp.route('/<int:expense_id>/delete', methods=['POST'])

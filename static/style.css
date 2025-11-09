@@ -5,3 +5,42 @@ body {
 .card-header {
     font-weight: bold;
 }
+.expenses-page {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.page-title {
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.stat-card {
+    min-width: 140px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    background: #f8f9fc;
+    border: 1px solid #e5e7eb;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-bottom: 2px;
+}
+
+.stat-value {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.stat-unit {
+    font-size: 0.75rem;
+    margin-left: 2px;
+    color: #6b7280;
+}
+
+.badge.bg-soft-primary {
+    background-color: #eef2ff;
+    font-weight: 500;
+}
