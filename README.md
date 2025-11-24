@@ -1,60 +1,49 @@
-# 💍 WeddingFinancePro  
-**심화 프로그래밍 결혼식 예산 관리 프로젝트 입니다.**  
+# Wedding Budget Manager
 
-> Flask 기반 결혼식 예산 관리 및 축의금 통계 웹 애플리케이션  
-> 결혼식을 준비하는 사용자가 **지출(비용)** 과 **수입(축의금)** 을 체계적으로 기록하고,  
-> 대시보드를 통해 **손익을 시각화**할 수 있는 프로그램입니다.
+Flask + SQLite로 만든 결혼 예산/축의금 관리 앱입니다. 축의금 양측(신랑/신부) 관리와 지출 관리, 대시보드 시각화를 제공합니다.
 
----
-
-## 📌 프로젝트 개요
-
-### 🎯 목적
-- 결혼식 비용(웨딩홀, 식대, 드레스 등)을 항목별로 관리  
-- 하객별 축의금 데이터를 신랑측 / 신부측으로 분리하여 관리  
-- 손익 계산 및 시각화(막대그래프, 원그래프)를 통해 직관적으로 재정 현황 파악  
-
-### 🧩 개발 환경
-| 항목 | 내용 |
-|------|------|
-| 언어 | Python 3.x |
-| 프레임워크 | Flask |
-| 데이터베이스 | SQLite (Flask-SQLAlchemy ORM) |
-| 프론트엔드 | HTML, Bootstrap5, Chart.js |
-| 실행 환경 | 로컬 데스크톱 (웹 브라우저 기반) |
-
----
-
-## ⚙️ 주요 기능
-
-| 기능 | 설명 |
-|------|------|
-| 💰 **지출 관리 (Expenses)** | 결혼식 관련 비용(웨딩홀, 스드메, 식대 등) 입력 및 합계 자동 계산 |
-| 🎁 **축의금 관리 (Guests)** | 신랑측 / 신부측 하객 축의금 관리, 이름별 검색 가능 |
-| 📊 **대시보드 (Dashboard)** | 총 수입 vs 지출, 신랑 vs 신부 비중, 지출 항목별 비율 시각화 |
-| 🔄 **데이터 초기화** *(선택)* | wedding_budget.db 삭제 또는 `/reset-db` 경로로 초기화 가능 |
-
----
-
-## 🗂️ 프로젝트 구조
-
+## 1. 실행 방법
+1) Python 3.10+ 설치  
+2) 가상환경 생성(권장):  
 ```bash
-WeddingFinancePro/
-│
-├── app.py                  # 메인 실행 파일
-├── models.py               # DB 모델 정의
-├── dashboard_routes.py     # 대시보드 관련 라우트
-├── expenses_routes.py      # 지출 관련 라우트
-├── guests_routes.py        # 축의금 관련 라우트
-│
-├── templates/              # HTML 템플릿 (Jinja2)
-│   ├── base.html
-│   ├── index.html
-│   ├── expenses.html
-│   └── guests.html
-│
-├── static/
-│   └── style.css           # CSS 스타일
-│
-├── requirements.txt        # 패키지 의존성
-└── README.md
+python -m venv .venv
+.venv\Scripts\activate       # Windows
+source .venv/bin/activate   # macOS/Linux
+```
+3) 의존성 설치:  
+```bash
+pip install -r requirements.txt
+```
+4) DB 초기화 및 실행:  
+```bash
+python app.py   # 최초 실행 시 DB 자동 생성
+```
+5) 브라우저에서 접속:  
+```
+http://localhost:5000
+```
+
+## 2. 주요 기능
+- 축의금 관리: 신랑/신부측 별 리스트, 이름/금액 정렬, 검색 모달, 수정/삭제 모달, 엑셀 내보내기.
+- 지출 관리: 카테고리/금액 입력 및 합계.
+- 대시보드: 총 수입 vs 지출, 비중 그래프.
+
+## 3. 폴더 구조
+```
+wedding-budget-manager/
+├─ app.py               # Flask 앱 초기화/라우트 등록
+├─ models.py            # SQLAlchemy 모델 정의
+├─ dashboard_routes.py  # 대시보드 라우트
+├─ expenses_routes.py   # 지출 라우트
+├─ guests_routes.py     # 축의금 라우트
+├─ templates/           # Jinja2 템플릿
+└─ static/              # 정적 파일
+```
+
+## 4. 개발 메모 (품질/평가 대비)
+- 파이썬 문법/라이브러리: Flask, SQLAlchemy, openpyxl 활용. 정렬/검색/합계는 SQLAlchemy case/sum 사용.
+- 구조화: 라우트별 파일 분리, 축의금 라우트 내 정렬/검색/합계 헬퍼 함수로 중복 제거.
+- 주석/가독성: 주요 라우트에 한 줄 설명과 의미 있는 함수명 사용.
+- 기능 정확성: 이름·금액 정렬, 검색 모달, 수정/삭제 모달, 엑셀 출력(전체 가운데 정렬) 확인.
+- 효율성: 정렬/검색 시 필요한 컬럼만 ORDER BY, 합계는 단일 쿼리로 계산.
+- 보고/발표 팁: 실행 데모(입력→검색 모달→수정 모달→엑셀 다운로드) 흐름으로 설명하면 평가 항목을 자연스럽게 커버할 수 있음.
