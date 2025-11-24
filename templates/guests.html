@@ -1,7 +1,40 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1 class="mb-4">축의금 관리</h1>
+<style>
+.sort-toggle {
+    display: inline-flex;
+    flex-direction: column;
+    line-height: 1;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+.sort-toggle a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 10px;
+    font-size: 10px;
+    color: #9aa0a6;
+    text-decoration: none;
+}
+.sort-toggle a:hover {
+    color: #6c757d;
+}
+.sort-toggle a.active {
+    font-weight: 700;
+    color: #0d6efd;
+}
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">축의금 관리</h1>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('guests.export_excel') }}" class="btn btn-success">엑셀로 다운로드</a>
+        <a href="{{ url_for('guests.export_pdf') }}" class="btn btn-outline-primary">PDF 요약</a>
+    </div>
+</div>
 
 <div class="card mb-4">
     <div class="card-header">축의금 입력</div>
@@ -27,7 +60,7 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label">관계 / 메모 (선택)</label>
+                <label class="form-label">메모 (선택)</label>
                 <input type="text" name="note" class="form-control">
             </div>
 
@@ -39,11 +72,17 @@
 <div class="card mb-4">
     <div class="card-header">이름으로 검색</div>
     <div class="card-body">
-        <form method="get">
-            <div class="input-group">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col">
                 <input type="text" name="search_name" class="form-control"
                        placeholder="이름 검색" value="{{ search_name }}">
+                <input type="hidden" name="sort_by" value="{{ sort_by }}">
+                <input type="hidden" name="order" value="{{ order }}">
+            </div>
+            <div class="col-auto">
                 <button class="btn btn-outline-secondary" type="submit">검색</button>
+            </div>
+            <div class="col-auto">
                 <a href="{{ url_for('guests.list_guests') }}" class="btn btn-outline-danger">초기화</a>
             </div>
         </form>
@@ -54,14 +93,30 @@
     <!-- 신랑측 -->
     <div class="col-md-6 mb-4">
         <h4>신랑측 (총 {{ "{:,}".format(groom_total) }} 원)</h4>
-        <table class="table table-striped">
+        <table class="table table-striped align-middle">
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>이름</th>
-                    <th>금액(원)</th>
+                    <th>
+                        이름
+                        <span class="sort-toggle">
+                            <a href="{{ url_for('guests.list_guests', search_name=search_name, sort_by='name', order='asc') }}"
+                               class="{% if sort_by == 'name' and order == 'asc' %}active{% endif %}">&#9650;</a>
+                            <a href="{{ url_for('guests.list_guests', search_name=search_name, sort_by='name', order='desc') }}"
+                               class="{% if sort_by == 'name' and order == 'desc' %}active{% endif %}">&#9660;</a>
+                        </span>
+                    </th>
+                    <th>
+                        금액(원)
+                        <span class="sort-toggle">
+                            <a href="{{ url_for('guests.list_guests', search_name=search_name, sort_by='amount', order='asc') }}"
+                               class="{% if sort_by == 'amount' and order == 'asc' %}active{% endif %}">&#9650;</a>
+                            <a href="{{ url_for('guests.list_guests', search_name=search_name, sort_by='amount', order='desc') }}"
+                               class="{% if sort_by == 'amount' and order == 'desc' %}active{% endif %}">&#9660;</a>
+                        </span>
+                    </th>
                     <th>메모</th>
-                    <th>삭제</th>
+                    <th>관리</th>
                 </tr>
             </thead>
             <tbody>
@@ -69,13 +124,26 @@
                     <tr>
                         <td>{{ loop.index }}</td>
                         <td>{{ guest.name }}</td>
-                        <td>{{ "{:,}".format(guest.amount) }}</td>
+                        <td>
+                            {{ "{:,}".format(guest.amount) }}
+                            {% if guest.amount >= highlight_threshold %}
+                                <span class="badge bg-warning text-dark ms-1">고액</span>
+                            {% endif %}
+                        </td>
                         <td>{{ guest.note }}</td>
                         <td>
-                            <form method="post" action="{{ url_for('guests.delete_guest', guest_id=guest.id) }}"
-                                  onsubmit="return confirm('정말 삭제할까요?');">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">삭제</button>
-                            </form>
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary"
+                                    data-edit
+                                    data-id="{{ guest.id }}"
+                                    data-name="{{ guest.name|e }}"
+                                    data-side="{{ guest.side }}"
+                                    data-amount="{{ guest.amount }}"
+                                    data-note="{{ guest.note|default('', true)|e }}"
+                                    data-edit-url="{{ url_for('guests.edit_guest', guest_id=guest.id) }}"
+                                    data-delete-url="{{ url_for('guests.delete_guest', guest_id=guest.id) }}">
+                                수정
+                            </button>
                         </td>
                     </tr>
                 {% else %}
@@ -90,14 +158,30 @@
     <!-- 신부측 -->
     <div class="col-md-6 mb-4">
         <h4>신부측 (총 {{ "{:,}".format(bride_total) }} 원)</h4>
-        <table class="table table-striped">
+        <table class="table table-striped align-middle">
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>이름</th>
-                    <th>금액(원)</th>
+                    <th>
+                        이름
+                        <span class="sort-toggle">
+                            <a href="{{ url_for('guests.list_guests', search_name=search_name, sort_by='name', order='asc') }}"
+                               class="{% if sort_by == 'name' and order == 'asc' %}active{% endif %}">&#9650;</a>
+                            <a href="{{ url_for('guests.list_guests', search_name=search_name, sort_by='name', order='desc') }}"
+                               class="{% if sort_by == 'name' and order == 'desc' %}active{% endif %}">&#9660;</a>
+                        </span>
+                    </th>
+                    <th>
+                        금액(원)
+                        <span class="sort-toggle">
+                            <a href="{{ url_for('guests.list_guests', search_name=search_name, sort_by='amount', order='asc') }}"
+                               class="{% if sort_by == 'amount' and order == 'asc' %}active{% endif %}">&#9650;</a>
+                            <a href="{{ url_for('guests.list_guests', search_name=search_name, sort_by='amount', order='desc') }}"
+                               class="{% if sort_by == 'amount' and order == 'desc' %}active{% endif %}">&#9660;</a>
+                        </span>
+                    </th>
                     <th>메모</th>
-                    <th>삭제</th>
+                    <th>관리</th>
                 </tr>
             </thead>
             <tbody>
@@ -108,10 +192,18 @@
                         <td>{{ "{:,}".format(guest.amount) }}</td>
                         <td>{{ guest.note }}</td>
                         <td>
-                            <form method="post" action="{{ url_for('guests.delete_guest', guest_id=guest.id) }}"
-                                  onsubmit="return confirm('정말 삭제할까요?');">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">삭제</button>
-                            </form>
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary"
+                                    data-edit
+                                    data-id="{{ guest.id }}"
+                                    data-name="{{ guest.name|e }}"
+                                    data-side="{{ guest.side }}"
+                                    data-amount="{{ guest.amount }}"
+                                    data-note="{{ guest.note|default('', true)|e }}"
+                                    data-edit-url="{{ url_for('guests.edit_guest', guest_id=guest.id) }}"
+                                    data-delete-url="{{ url_for('guests.delete_guest', guest_id=guest.id) }}">
+                                수정
+                            </button>
                         </td>
                     </tr>
                 {% else %}
@@ -123,4 +215,169 @@
         </table>
     </div>
 </div>
+
+{# 검색 결과 모달 #}
+<div class="modal fade" id="searchModal" tabindex="-1" aria-hidden="true"
+     data-autoshow="{{ 'true' if search_name else 'false' }}">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">검색 결과: "{{ search_name }}"</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% if search_results %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>이름</th>
+                                    <th>금액(원)</th>
+                                    <th>소속</th>
+                                    <th>메모</th>
+                                    <th>관리</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for guest in search_results %}
+                                    <tr>
+                                        <td>{{ guest.name }}</td>
+                                        <td>{{ "{:,}".format(guest.amount) }}</td>
+                                        <td>{{ '신랑측' if guest.side == 'groom' else '신부측' }}</td>
+                                        <td>{{ guest.note }}</td>
+                                        <td>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-primary"
+                                                    data-edit-from-search
+                                                    data-id="{{ guest.id }}"
+                                                    data-name="{{ guest.name|e }}"
+                                                    data-side="{{ guest.side }}"
+                                                    data-amount="{{ guest.amount }}"
+                                                    data-note="{{ guest.note|default('', true)|e }}"
+                                                    data-edit-url="{{ url_for('guests.edit_guest', guest_id=guest.id) }}"
+                                                    data-delete-url="{{ url_for('guests.delete_guest', guest_id=guest.id) }}">
+                                                수정
+                                            </button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="mb-0 text-muted">검색 결과가 없습니다.</p>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# 수정/삭제 모달 #}
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">축의금 수정</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm" method="post">
+                    <div class="mb-3">
+                        <label class="form-label">이름</label>
+                        <input type="text" class="form-control" id="editName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">소속</label>
+                        <select class="form-select" id="editSide" name="side" required>
+                            <option value="groom">신랑측</option>
+                            <option value="bride">신부측</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">금액(원)</label>
+                        <input type="number" class="form-control" id="editAmount" name="amount" min="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">메모</label>
+                        <textarea class="form-control" id="editNote" name="note" rows="3"></textarea>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-danger" id="deleteButton">삭제</button>
+                        <button type="submit" class="btn btn-primary">저장</button>
+                    </div>
+                </form>
+                <form id="deleteForm" method="post" class="d-none"></form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const editModalEl = document.getElementById('editModal');
+    const editModal = new bootstrap.Modal(editModalEl);
+    const searchModalEl = document.getElementById('searchModal');
+    const searchModal = searchModalEl ? new bootstrap.Modal(searchModalEl) : null;
+
+    const editForm = document.getElementById('editForm');
+    const deleteForm = document.getElementById('deleteForm');
+
+    function openEditModal(data) {
+        editForm.action = data.editUrl;
+        deleteForm.action = data.deleteUrl;
+
+        document.getElementById('editName').value = data.name || '';
+        document.getElementById('editSide').value = data.side || 'groom';
+        document.getElementById('editAmount').value = data.amount || 0;
+        document.getElementById('editNote').value = data.note || '';
+
+        if (searchModal) {
+            searchModal.hide();
+        }
+        editModal.show();
+    }
+
+    document.querySelectorAll('[data-edit]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            openEditModal({
+                id: btn.dataset.id,
+                name: btn.dataset.name,
+                side: btn.dataset.side,
+                amount: btn.dataset.amount,
+                note: btn.dataset.note,
+                editUrl: btn.dataset.editUrl,
+                deleteUrl: btn.dataset.deleteUrl
+            });
+        });
+    });
+
+    document.querySelectorAll('[data-edit-from-search]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            openEditModal({
+                id: btn.dataset.id,
+                name: btn.dataset.name,
+                side: btn.dataset.side,
+                amount: btn.dataset.amount,
+                note: btn.dataset.note,
+                editUrl: btn.dataset.editUrl,
+                deleteUrl: btn.dataset.deleteUrl
+            });
+        });
+    });
+
+    const deleteButton = document.getElementById('deleteButton');
+    deleteButton.addEventListener('click', function () {
+        if (confirm('정말 삭제할까요?')) {
+            deleteForm.submit();
+        }
+    });
+
+    if (searchModalEl && searchModalEl.dataset.autoshow === 'true') {
+        searchModal.show();
+    }
+});
+</script>
 {% endblock %}
