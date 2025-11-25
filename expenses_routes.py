@@ -1,8 +1,40 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
 from sqlalchemy import func
 from models import db, Expense
 
 expenses_bp = Blueprint('expenses', __name__, url_prefix='/expenses')
+
+
+@expenses_bp.before_request
+def require_access_code():
+    # 접근 허용 경로 제외: 패스코드 해제
+    if request.endpoint in ('expenses.unlock', 'expenses.lock'):
+        return
+
+    if not session.get('expenses_unlocked'):
+        flash('지출 관리로 이동하려면 비밀번호가 필요합니다.', 'warning')
+        return redirect(url_for('dashboard.index'))
+
+
+@expenses_bp.route('/unlock', methods=['POST'])
+def unlock():
+    access_code = request.form.get('access_code', '').strip()
+    expected = current_app.config.get('EXPENSES_ACCESS_CODE', '1234')
+
+    if access_code == expected:
+        session['expenses_unlocked'] = True
+        flash('지출 관리가 열렸습니다.', 'success')
+        return redirect(url_for('expenses.list_expenses'))
+
+    flash('비밀번호가 올바르지 않습니다.', 'danger')
+    return redirect(url_for('dashboard.index'))
+
+
+@expenses_bp.route('/lock', methods=['POST'])
+def lock():
+    session.pop('expenses_unlocked', None)
+    flash('지출 관리 잠금이 설정되었습니다.', 'info')
+    return redirect(url_for('dashboard.index'))
 
 
 @expenses_bp.route('/', methods=['GET', 'POST'])

@@ -1,70 +1,132 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1 class="mb-4">대시보드</h1>
+{% set coverage_clamped = 150 if coverage_percent > 150 else coverage_percent %}
 
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card text-bg-success mb-3">
-            <div class="card-header">총 축의금 (수입)</div>
-            <div class="card-body">
-                <h3 class="card-title">{{ "{:,}".format(total_income) }} 원</h3>
+<div class="dashboard-hero mb-4">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <p class="hero-kicker mb-2 text-uppercase">오늘의 예산 스냅샷</p>
+            <h1 class="hero-title mb-2">대시보드</h1>
+            <p class="hero-subtext mb-3">
+                축의금과 지출 흐름을 한눈에 확인하세요. 필요할 땐 지출 관리를 잠금 해제해 바로 이동할 수 있습니다.
+            </p>
+            <div class="d-flex flex-wrap gap-2">
+                {% if session.get('expenses_unlocked') %}
+                    <div class="d-flex flex-wrap gap-2">
+                        <a class="btn btn-light text-primary-emphasis shadow-sm" href="{{ url_for('expenses.list_expenses') }}">
+                            <i class="bi bi-unlock-fill me-1"></i>지출 관리 바로 가기
+                        </a>
+                        <form method="post" action="{{ url_for('expenses.lock') }}">
+                            <button class="btn btn-outline-light shadow-sm" type="submit">
+                                <i class="bi bi-lock-fill me-1"></i>다시 잠그기
+                            </button>
+                        </form>
+                    </div>
+                {% else %}
+                    <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#expenseAccessModal">
+                        <i class="bi bi-lock-fill me-1"></i>지출 관리 잠금 해제
+                    </button>
+                {% endif %}
+                <a class="btn btn-outline-light text-white border-white shadow-sm" href="{{ url_for('guests.list_guests') }}">
+                    <i class="bi bi-people-fill me-1"></i>축의금 관리
+                </a>
             </div>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card text-bg-danger mb-3">
-            <div class="card-header">총 예식 비용 (지출)</div>
-            <div class="card-body">
-                <h3 class="card-title">{{ "{:,}".format(total_expense) }} 원</h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card text-bg-primary mb-3">
-            <div class="card-header">최종 손익</div>
-            <div class="card-body">
-                <h3 class="card-title">
-                    {% if net_profit >= 0 %}
-                        +{{ "{:,}".format(net_profit) }} 원
-                    {% else %}
-                        -{{ "{:,}".format(net_profit|abs) }} 원
-                    {% endif %}
-                </h3>
+        <div class="col-lg-4 mt-3 mt-lg-0">
+            <div class="hero-mini-card">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <div class="text-muted small mb-1">예산 커버율</div>
+                        <div class="h3 mb-0">{{ coverage_percent }}%</div>
+                    </div>
+                    <span class="badge bg-light text-dark">업데이트</span>
+                </div>
+                <div class="progress bg-light-subtle" style="height: 10px;">
+                    <div class="progress-bar" role="progressbar" style="width: {{ coverage_clamped }}%;" aria-valuenow="{{ coverage_percent }}" aria-valuemin="0" aria-valuemax="150"></div>
+                </div>
+                <p class="small text-muted mt-2 mb-0">100%를 넘기면 지출이 모두 커버된 상태입니다.</p>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row">
-    <!-- 수입 vs 지출 -->
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header">총 수입 vs 총 지출</div>
-            <div class="card-body">
-                <canvas id="incomeExpenseChart"></canvas>
-            </div>
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="summary-card income">
+            <div class="summary-label">총 축의금</div>
+            <div class="summary-value">{{ "{:,}".format(total_income) }}<span class="summary-unit">원</span></div>
+            <div class="summary-chip">수입</div>
         </div>
     </div>
-
-    <!-- 신랑 vs 신부 축의금 -->
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header">신랑측 vs 신부측 축의금</div>
-            <div class="card-body">
-                <canvas id="brideGroomChart"></canvas>
+    <div class="col-md-3">
+        <div class="summary-card expense">
+            <div class="summary-label">총 예식 비용</div>
+            <div class="summary-value">{{ "{:,}".format(total_expense) }}<span class="summary-unit">원</span></div>
+            <div class="summary-chip">지출</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="summary-card balance">
+            <div class="summary-label">최종 손익</div>
+            <div class="summary-value">
+                {% if net_profit >= 0 %}
+                    +{{ "{:,}".format(net_profit) }}
+                {% else %}
+                    -{{ "{:,}".format(net_profit|abs) }}
+                {% endif %}
+                <span class="summary-unit">원</span>
             </div>
+            <div class="summary-chip">남은 금액</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="summary-card cover">
+            <div class="summary-label">커버율</div>
+            <div class="summary-value">{{ coverage_percent }}<span class="summary-unit">%</span></div>
+            <div class="summary-chip">진행률</div>
         </div>
     </div>
 </div>
 
-<div class="row">
-    <!-- 지출 항목별 비중 -->
-    <div class="col-md-12 mb-4">
-        <div class="card">
-            <div class="card-header">지출 항목별 비중</div>
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card dashboard-card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <span class="fw-semibold">수입 vs 지출</span>
+                <span class="badge bg-secondary-subtle text-secondary-emphasis">금액 단위: 원</span>
+            </div>
             <div class="card-body">
-                <canvas id="expensePieChart"></canvas>
+                <canvas id="incomeExpenseChart" height="130"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card dashboard-card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <span class="fw-semibold">지출 항목별 비중</span>
+                <span class="text-muted small">주요 3개 항목 표시</span>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 align-items-center">
+                    <div class="col-sm-6">
+                        <canvas id="expensePieChart" height="140"></canvas>
+                    </div>
+                    <div class="col-sm-6">
+                        {% if top_expenses %}
+                            <ul class="list-group list-group-flush small">
+                                {% for item in top_expenses %}
+                                    <li class="list-group-item px-0 d-flex justify-content-between">
+                                        <span>{{ item.category }}</span>
+                                        <strong>{{ "{:,}".format(item.amount) }}원</strong>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-muted mb-0">등록된 지출 항목이 없습니다.</p>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -74,62 +136,77 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // 파이썬에서 넘긴 데이터
     const totalIncome = {{ total_income }};
     const totalExpense = {{ total_expense }};
-    const groomTotal = {{ groom_total }};
-    const brideTotal = {{ bride_total }};
     const expenseLabels = {{ expense_labels | tojson }};
     const expenseValues = {{ expense_values | tojson }};
 
-    // 1. 총 수입 vs 총 지출 차트
+    const colors = {
+        income: '#0ea5e9',
+        expense: '#ef4444',
+        expensePalette: ['#0ea5e9', '#f59e0b', '#10b981', '#6366f1', '#ef4444', '#a855f7']
+    };
+
+    // 1) 수입 vs 지출 막대 차트
     const ctx1 = document.getElementById('incomeExpenseChart').getContext('2d');
     new Chart(ctx1, {
         type: 'bar',
         data: {
             labels: ['수입', '지출'],
             datasets: [{
-                label: '금액(원)',
-                data: [totalIncome, totalExpense]
+                label: '금액',
+                data: [totalIncome, totalExpense],
+                backgroundColor: [colors.income, colors.expense],
+                borderRadius: 10,
+                barThickness: 48
             }]
         },
         options: {
             responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => new Intl.NumberFormat().format(ctx.parsed.y) + ' 원'
+                    }
+                }
+            },
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    ticks: {
+                        callback: (value) => new Intl.NumberFormat().format(value) + '원'
+                    }
                 }
             }
         }
     });
 
-    // 2. 신랑측 vs 신부측 축의금
-    const ctx2 = document.getElementById('brideGroomChart').getContext('2d');
+    // 2) 지출 항목별 비중
+    const ctx2 = document.getElementById('expensePieChart').getContext('2d');
     new Chart(ctx2, {
-        type: 'pie',
-        data: {
-            labels: ['신랑측', '신부측'],
-            datasets: [{
-                data: [groomTotal, brideTotal]
-            }]
-        },
-        options: {
-            responsive: true
-        }
-    });
-
-    // 3. 지출 항목별 비중
-    const ctx3 = document.getElementById('expensePieChart').getContext('2d');
-    new Chart(ctx3, {
         type: 'doughnut',
         data: {
             labels: expenseLabels,
             datasets: [{
-                data: expenseValues
+                data: expenseValues,
+                backgroundColor: colors.expensePalette
             }]
         },
         options: {
-            responsive: true
+            responsive: true,
+            cutout: '60%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { boxWidth: 12 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => `${ctx.label}: ${new Intl.NumberFormat().format(ctx.parsed)} 원`
+                    }
+                }
+            }
         }
     });
 </script>

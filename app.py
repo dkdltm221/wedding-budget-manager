@@ -10,6 +10,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///wedding_budget.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-should-be-changed')
+app.config['EXPENSES_ACCESS_CODE'] = os.environ.get('EXPENSES_ACCESS_CODE', '0000')
 
 db.init_app(app)
 
