@@ -42,19 +42,12 @@
                 {% if total_guest_amount > 0 %}
                 {% set groom_ratio = (groom_total / total_guest_amount * 100) if total_guest_amount else 50 %}
                 {% set bride_ratio = 100 - groom_ratio %}
-                <div class="progress guest-progress mt-3">
-                    <div class="progress-bar bg-guest-indigo"
-                         role="progressbar"
-                         style="width: {{ groom_ratio|default(0)|round(1) }}%"
-                         aria-valuenow="{{ groom_ratio|default(0)|round(1) }}"
-                         aria-valuemin="0"
-                         aria-valuemax="100"></div>
-                    <div class="progress-bar bg-guest-pink"
-                         role="progressbar"
-                         style="width: {{ bride_ratio|default(0)|round(1) }}%"
-                         aria-valuenow="{{ bride_ratio|default(0)|round(1) }}"
-                         aria-valuemin="0"
-                         aria-valuemax="100"></div>
+                <div class="progress guest-progress mt-3"
+                     id="guestRatioProgress"
+                     data-groom="{{ groom_ratio|default(0)|round(1) }}"
+                     data-bride="{{ bride_ratio|default(0)|round(1) }}">
+                    <div class="progress-bar bg-guest-indigo" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
+                    <div class="progress-bar bg-guest-pink" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
                 </div>
                 <div class="d-flex justify-content-between small text-light mt-1">
                     <span>신랑 측 {{ groom_ratio|round(1) }}%</span>
@@ -481,6 +474,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (searchModalEl && searchModalEl.dataset.autoshow === 'true') {
         searchModal.show();
+    }
+
+    // 비율 진행바 너비 설정 (템플릿 경고 방지용 데이터-속성 사용)
+    const ratioEl = document.getElementById('guestRatioProgress');
+    if (ratioEl) {
+        const groomPct = Number(ratioEl.dataset.groom || 0);
+        const bridePct = Number(ratioEl.dataset.bride || 0);
+        const bars = ratioEl.querySelectorAll('.progress-bar');
+        if (bars[0]) {
+            bars[0].style.width = `${groomPct}%`;
+            bars[0].setAttribute('aria-valuenow', groomPct);
+        }
+        if (bars[1]) {
+            bars[1].style.width = `${bridePct}%`;
+            bars[1].setAttribute('aria-valuenow', bridePct);
+        }
     }
 });
 </script>
