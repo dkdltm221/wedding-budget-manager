@@ -1,0 +1,42 @@
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card dashboard-card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <span class="fw-semibold">수입 vs 지출</span>
+                <span class="badge bg-secondary-subtle text-secondary-emphasis">금액 단위: 원</span>
+            </div>
+            <div class="card-body">
+                <canvas id="incomeExpenseChart" height="130"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card dashboard-card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <span class="fw-semibold">지출 항목별 비중</span>
+                <span class="text-muted small">주요 3개 항목 표시</span>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 align-items-center">
+                    <div class="col-sm-6">
+                        <canvas id="expensePieChart" height="140"></canvas>
+                    </div>
+                    <div class="col-sm-6">
+                        {% if top_expenses %}
+                            <ul class="list-group list-group-flush small">
+                                {% for item in top_expenses %}
+                                    <li class="list-group-item px-0 d-flex justify-content-between">
+                                        <span>{{ item.category }}</span>
+                                        <strong>{{ "{:,}".format(item.amount) }}원</strong>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-muted mb-0">등록된 지출 항목이 없습니다.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

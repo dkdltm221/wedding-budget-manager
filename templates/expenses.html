@@ -1,157 +1,23 @@
-{% extends 'base.html' %}
+{% extends 'layouts/base.html' %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/expenses.css') }}">
+{% endblock %}
 
 {% block content %}
 <div class="expenses-page container-fluid px-0">
-
-    <div class="d-flex flex-wrap justify-content-between align-items-end mb-4 gap-3">
-        <div>
-            <h1 class="page-title mb-1">
-                <i class="bi bi-wallet2 me-2"></i>지출 관리
-            </h1>
-            <p class="text-muted mb-0 small">
-                결혼 준비 지출을 항목별로 기록하고 한눈에 확인할 수 있는 페이지입니다.
-            </p>
-        </div>
-
-        <div class="d-flex gap-3">
-            <div class="stat-card">
-                <div class="stat-label">총 지출</div>
-                <div class="stat-value text-primary">
-                    {{ "{:,}".format(total_expense) }}<span class="stat-unit">원</span>
-                </div>
-            </div>
-            <div class="stat-card d-none d-sm-block">
-                <div class="stat-label">지출 건수</div>
-                <div class="stat-value">
-                    {{ expenses|length }}<span class="stat-unit">건</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    {% include 'components/expenses/header.html' %}
     <div class="row g-4">
-
-        <!-- 좌측: 추가 폼 -->
         <div class="col-lg-4">
-            <div class="card shadow-sm border-0 rounded-3 h-100">
-                <div class="card-header bg-white border-0 pb-0">
-                    <h5 class="card-title mb-1">
-                        <i class="bi bi-plus-circle me-2"></i>지출 항목 추가
-                    </h5>
-                    <p class="text-muted small mb-0">
-                        웨딩홀, 스드메, 식대, 폐백, 답례품 등 상세히 나누어 기록하세요.
-                    </p>
-                </div>
-                <div class="card-body">
-                    <form method="post" class="needs-validation" novalidate>
-                        <div class="mb-3">
-                            <label class="form-label">항목명</label>
-                            <input type="text" name="category" class="form-control"
-                                   placeholder="예: 웨딩홀 대관료" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">설명 / 메모</label>
-                            <input type="text" name="description" class="form-control"
-                                   placeholder="예: ○○웨딩홀, 300명 기준">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">금액 (원)</label>
-                            <div class="input-group">
-                                <span class="input-group-text">₩</span>
-                                <input type="number" name="amount" class="form-control"
-                                       min="0" placeholder="예: 3500000" required>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-check2-circle me-1"></i>지출 추가하기
-                        </button>
-                    </form>
-                </div>
-            </div>
+            {% include 'components/expenses/form.html' %}
         </div>
-
-        <!-- 우측: 목록 -->
         <div class="col-lg-8">
-            <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="card-title mb-0">
-                            <i class="bi bi-list-ul me-2"></i>지출 내역
-                        </h5>
-                        <span class="text-muted small">최근 입력 순으로 정렬됩니다.</span>
-                    </div>
-                </div>
-
-                <div class="card-body pt-0">
-                    <div class="table-responsive mt-3">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="text-center" style="width: 5%;">#</th>
-                                    <th style="width: 20%;">항목</th>
-                                    <th>설명</th>
-                                    <th class="text-end" style="width: 18%;">금액(원)</th>
-                                    <th class="text-center" style="width: 9%;">수정</th>
-                                    <th class="text-center" style="width: 8%;">삭제</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for expense in expenses %}
-                                    <tr>
-                                        <td class="text-center text-muted small">
-                                            {{ loop.index }}
-                                        </td>
-                                        <td>
-                                            <span class="badge rounded-pill bg-soft-primary text-primary">
-                                                {{ expense.category }}
-                                            </span>
-                                        </td>
-                                        <td class="text-muted">
-                                            {{ expense.description or '-' }}
-                                        </td>
-                                        <td class="text-end fw-semibold">
-                                            {{ "{:,}".format(expense.amount) }}
-                                        </td>
-                                        <td class="text-center">
-                                            <a href="{{ url_for('expenses.edit_expense', expense_id=expense.id) }}"
-                                               class="btn btn-sm btn-outline-secondary rounded-circle"
-                                               title="수정">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                        </td>
-                                        <td class="text-center">
-                                            <form method="post"
-                                                  action="{{ url_for('expenses.delete_expense', expense_id=expense.id) }}"
-                                                  onsubmit="return confirm('정말 삭제할까요?');">
-                                                <button type="submit"
-                                                        class="btn btn-sm btn-outline-danger rounded-circle"
-                                                        title="삭제">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                {% else %}
-                                    <tr>
-                                        <td colspan="6" class="text-center text-muted py-4">
-                                            아직 등록된 지출이 없습니다. 왼쪽에서 첫 지출을 입력해보세요.
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="card-footer bg-white border-0 d-md-none">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted small">총 지출</span>
-                        <strong>{{ "{:,}".format(total_expense) }} 원</strong>
-                    </div>
-                </div>
-            </div>
+            {% include 'components/expenses/list.html' %}
         </div>
-
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/expenses.js') }}"></script>
 {% endblock %}
