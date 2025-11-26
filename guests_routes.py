@@ -72,12 +72,14 @@ def list_guests():
 
     search_name = request.args.get('search_name', '').strip()
     sort_by, order, order_clause = _sorting_from_request(request.args)
-    search_filter = _search_filter(search_name)
+    search_filter = _search_filter(search_name)  # 검색 모달/리스트 전용
 
-    groom_guests = _fetch_guests('groom', order_clause, search_filter)
-    bride_guests = _fetch_guests('bride', order_clause, search_filter)
-    groom_total, bride_total = _totals(search_filter)
+    # 메인 화면은 항상 전체 데이터를 기준으로 보여준다.
+    groom_guests = _fetch_guests('groom', order_clause, search_filter=None)
+    bride_guests = _fetch_guests('bride', order_clause, search_filter=None)
+    groom_total, bride_total = _totals(search_filter=None)
 
+    # 검색 결과만 모달/최근 리스트에 사용
     search_results = (
         Guest.query.filter(search_filter).order_by(order_clause, Guest.id).all()
         if search_filter is not None else []
