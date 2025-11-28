@@ -1,0 +1,35 @@
+<div class="card shadow-sm border-0 rounded-3 h-100">
+    <div class="card-header bg-white border-0 pb-0">
+        <h5 class="card-title mb-1">
+            <i class="bi bi-plus-circle me-2"></i>지출 항목 추가
+        </h5>
+        <p class="text-muted small mb-0">
+            웨딩홀, 스드메, 식대, 폐백, 답례품 등 상세히 나누어 기록하세요.
+        </p>
+    </div>
+    <div class="card-body">
+        <form method="post" class="needs-validation" novalidate>
+            <div class="mb-3">
+                <label class="form-label">항목명</label>
+                <input type="text" name="category" class="form-control"
+                       placeholder="예: 웨딩홀 대관료" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">설명 / 메모</label>
+                <input type="text" name="description" class="form-control"
+                       placeholder="예: ○○웨딩홀, 300명 기준">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">금액 (원)</label>
+                <div class="input-group">
+                    <span class="input-group-text">₩</span>
+                    <input type="number" name="amount" class="form-control"
+                           min="0" placeholder="예: 3500000" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-check2-circle me-1"></i>지출 추가하기
+            </button>
+        </form>
+    </div>
+ </div>

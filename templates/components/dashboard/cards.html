@@ -1,0 +1,37 @@
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="summary-card income">
+            <div class="summary-label">총 축의금</div>
+            <div class="summary-value">{{ "{:,}".format(total_income) }}<span class="summary-unit">원</span></div>
+            <div class="summary-chip">수입</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="summary-card expense">
+            <div class="summary-label">총 예식 비용</div>
+            <div class="summary-value">{{ "{:,}".format(total_expense) }}<span class="summary-unit">원</span></div>
+            <div class="summary-chip">지출</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="summary-card balance">
+            <div class="summary-label">최종 손익</div>
+            <div class="summary-value">
+                {% if net_profit >= 0 %}
+                    +{{ "{:,}".format(net_profit) }}
+                {% else %}
+                    -{{ "{:,}".format(net_profit|abs) }}
+                {% endif %}
+                <span class="summary-unit">원</span>
+            </div>
+            <div class="summary-chip">남은 금액</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="summary-card cover">
+            <div class="summary-label">커버율</div>
+            <div class="summary-value">{{ coverage_percent }}<span class="summary-unit">%</span></div>
+            <div class="summary-chip">진행률</div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,147 @@
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="guest-card">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">신랑 측 목록 <span class="text-muted small">(총 {{ "{:,}".format(groom_total) }} 원)</span></h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table guest-table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="text-center" style="width: 60px;">#</th>
+                            <th>
+                                이름
+                                <span class="sort-toggle">
+                                    <a href="{{ url_for('guests.list_guests', search_name=search_name, sort_by='name', order='asc') }}"
+                                       class="{% if sort_by == 'name' and order == 'asc' %}active{% endif %}">&#9650;</a>
+                                    <a href="{{ url_for('guests.list_guests', search_name=search_name, sort_by='name', order='desc') }}"
+                                       class="{% if sort_by == 'name' and order == 'desc' %}active{% endif %}">&#9660;</a>
+                                </span>
+                            </th>
+                            <th>
+                                금액(원)
+                                <span class="sort-toggle">
+                                    <a href="{{ url_for('guests.list_guests', search_name=search_name, sort_by='amount', order='asc') }}"
+                                       class="{% if sort_by == 'amount' and order == 'asc' %}active{% endif %}">&#9650;</a>
+                                    <a href="{{ url_for('guests.list_guests', search_name=search_name, sort_by='amount', order='desc') }}"
+                                       class="{% if sort_by == 'amount' and order == 'desc' %}active{% endif %}">&#9660;</a>
+                                </span>
+                            </th>
+                            <th>메모</th>
+                            <th class="text-end">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for guest in groom_guests %}
+                            <tr>
+                                <td class="text-center">{{ loop.index }}</td>
+                                <td>
+                                    <div class="fw-semibold">{{ guest.name }}</div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="fw-semibold">{{ "{:,}".format(guest.amount) }}</span>
+                                        {% if guest.amount >= highlight_threshold %}
+                                            <span class="badge badge-soft-warning">고액</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="text-muted">{{ guest.note }}</td>
+                                <td class="text-end">
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary"
+                                            data-edit
+                                            data-id="{{ guest.id }}"
+                                            data-name="{{ guest.name|e }}"
+                                            data-side="{{ guest.side }}"
+                                            data-amount="{{ guest.amount }}"
+                                            data-note="{{ guest.note|default('', true)|e }}"
+                                            data-edit-url="{{ url_for('guests.edit_guest', guest_id=guest.id) }}"
+                                            data-delete-url="{{ url_for('guests.delete_guest', guest_id=guest.id) }}">
+                                        수정
+                                    </button>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">등록된 신랑 측 축의금이 없습니다.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="guest-card">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">신부 측 목록 <span class="text-muted small">(총 {{ "{:,}".format(bride_total) }} 원)</span></h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table guest-table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="text-center" style="width: 60px;">#</th>
+                            <th>
+                                이름
+                                <span class="sort-toggle">
+                                    <a href="{{ url_for('guests.list_guests', search_name=search_name, sort_by='name', order='asc') }}"
+                                       class="{% if sort_by == 'name' and order == 'asc' %}active{% endif %}">&#9650;</a>
+                                    <a href="{{ url_for('guests.list_guests', search_name=search_name, sort_by='name', order='desc') }}"
+                                       class="{% if sort_by == 'name' and order == 'desc' %}active{% endif %}">&#9660;</a>
+                                </span>
+                            </th>
+                            <th>
+                                금액(원)
+                                <span class="sort-toggle">
+                                    <a href="{{ url_for('guests.list_guests', search_name=search_name, sort_by='amount', order='asc') }}"
+                                       class="{% if sort_by == 'amount' and order == 'asc' %}active{% endif %}">&#9650;</a>
+                                    <a href="{{ url_for('guests.list_guests', search_name=search_name, sort_by='amount', order='desc') }}"
+                                       class="{% if sort_by == 'amount' and order == 'desc' %}active{% endif %}">&#9660;</a>
+                                </span>
+                            </th>
+                            <th>메모</th>
+                            <th class="text-end">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for guest in bride_guests %}
+                            <tr>
+                                <td class="text-center">{{ loop.index }}</td>
+                                <td><div class="fw-semibold">{{ guest.name }}</div></td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="fw-semibold">{{ "{:,}".format(guest.amount) }}</span>
+                                        {% if guest.amount >= highlight_threshold %}
+                                            <span class="badge badge-soft-warning">고액</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="text-muted">{{ guest.note }}</td>
+                                <td class="text-end">
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary"
+                                            data-edit
+                                            data-id="{{ guest.id }}"
+                                            data-name="{{ guest.name|e }}"
+                                            data-side="{{ guest.side }}"
+                                            data-amount="{{ guest.amount }}"
+                                            data-note="{{ guest.note|default('', true)|e }}"
+                                            data-edit-url="{{ url_for('guests.edit_guest', guest_id=guest.id) }}"
+                                            data-delete-url="{{ url_for('guests.delete_guest', guest_id=guest.id) }}">
+                                        수정
+                                    </button>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">등록된 신부 측 축의금이 없습니다.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

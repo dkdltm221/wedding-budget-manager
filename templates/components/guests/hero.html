@@ -1,0 +1,56 @@
+{% set total_guest_amount = groom_total + bride_total %}
+<div class="guest-hero mb-4">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <p class="hero-kicker text-uppercase mb-2">축의금 관리</p>
+            <h1 class="hero-title mb-2">축의금 명부 &amp; 현황</h1>
+            <p class="hero-subtext mb-3">
+                신랑/신부 측 축의금을 한눈에 보고, 검색·정렬·수정·삭제를 빠르게 처리하세요.
+            </p>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ url_for('guests.export_excel') }}" class="btn btn-light text-primary-emphasis shadow-sm">
+                    <i class="bi bi-download me-1"></i>엑셀 다운로드
+                </a>
+                <a href="{{ url_for('guests.export_pdf') }}" class="btn btn-outline-light text-white shadow-sm border-white">
+                    <i class="bi bi-filetype-pdf me-1"></i>PDF 출력
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-4 mt-3 mt-lg-0">
+            <div class="guest-hero-card">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <div class="text-light small opacity-75">총 축의금</div>
+                        <div class="h3 mb-0 text-white">{{ "{:,}".format(total_guest_amount) }}<span class="guest-unit">원</span></div>
+                    </div>
+                    <span class="guest-chip guest-chip-light">실시간</span>
+                </div>
+                <div class="d-flex gap-3">
+                    <div class="guest-mini-stat">
+                        <div class="mini-label">신랑 측</div>
+                        <div class="mini-value">{{ "{:,}".format(groom_total) }}<span class="guest-unit">원</span></div>
+                    </div>
+                    <div class="guest-mini-stat">
+                        <div class="mini-label">신부 측</div>
+                        <div class="mini-value">{{ "{:,}".format(bride_total) }}<span class="guest-unit">원</span></div>
+                    </div>
+                </div>
+                {% if total_guest_amount > 0 %}
+                {% set groom_ratio = (groom_total / total_guest_amount * 100) if total_guest_amount else 50 %}
+                {% set bride_ratio = 100 - groom_ratio %}
+                <div class="progress guest-progress mt-3"
+                     id="guestRatioProgress"
+                     data-groom="{{ groom_ratio|default(0)|round(1) }}"
+                     data-bride="{{ bride_ratio|default(0)|round(1) }}">
+                    <div class="progress-bar bg-guest-indigo" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
+                    <div class="progress-bar bg-guest-pink" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <div class="d-flex justify-content-between small text-light mt-1">
+                    <span>신랑 측 {{ groom_ratio|round(1) }}%</span>
+                    <span>신부 측 {{ bride_ratio|round(1) }}%</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

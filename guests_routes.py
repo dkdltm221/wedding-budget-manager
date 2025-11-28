@@ -1,102 +1,48 @@
 import io
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file
-from sqlalchemy import func, case, asc, desc
 from models import db, Guest
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font
 from fpdf import FPDF
+from services.guests_service import (
+    sorting_from_request,
+    search_filter,
+    fetch_guests,
+    totals,
+    parse_amount,
+    create_guest
+)
+from services.guests_view import build_guest_page_context
+from forms import GuestForm
 
 guests_bp = Blueprint('guests', __name__)
 HIGHLIGHT_THRESHOLD = 300000  # 금액 배지 표시 기준 (원)
 
 
-# 요청 파라미터로 정렬 기준/방향을 해석한다.
-def _sorting_from_request(args) -> Tuple[str, str, object]:
-    sort_by = args.get('sort_by', 'id')
-    order = args.get('order', 'desc')
-    sort_map = {'name': Guest.name, 'amount': Guest.amount, 'id': Guest.id}
-    sort_column = sort_map.get(sort_by, Guest.id)
-    order_fn = desc if order == 'desc' else asc
-    return sort_by, order, order_fn(sort_column)
-
-
-# 이름 검색어가 있을 때 필터를 생성한다.
-def _search_filter(name: str) -> Optional[object]:
-    return Guest.name.contains(name) if name else None
-
-
-# 측(신랑/신부)별 손님 목록을 정렬·필터와 함께 조회한다.
-def _fetch_guests(side: str, order_clause, search_filter=None):
-    query = Guest.query.filter(Guest.side == side)
-    if search_filter is not None:
-        query = query.filter(search_filter)
-    return query.order_by(order_clause, Guest.id).all()
-
-
-# 신랑/신부 합계를 구한다.
-def _totals(search_filter=None) -> Tuple[int, int]:
-    totals_query = db.session.query(
-        func.coalesce(func.sum(case((Guest.side == 'groom', Guest.amount), else_=0)), 0).label('groom_total'),
-        func.coalesce(func.sum(case((Guest.side == 'bride', Guest.amount), else_=0)), 0).label('bride_total')
-    )
-    if search_filter is not None:
-        totals_query = totals_query.filter(search_filter)
-    totals = totals_query.first()
-    return (totals.groom_total or 0, totals.bride_total or 0)
-
-
 @guests_bp.route('/', methods=['GET', 'POST'])
 def list_guests():
     """손님 목록, 추가, 검색, 정렬을 처리한다."""
+    form = GuestForm(request.form, meta={'csrf': False})
     if request.method == 'POST':
-        name = request.form.get('name', '').strip()
-        side = request.form.get('side', '').strip()
-        amount = request.form.get('amount', '').strip()
-        note = request.form.get('note', '').strip()
-
-        if not name or not side or not amount:
-            flash('이름, 소속, 금액은 필수입니다.', 'danger')
-        else:
+        if form.validate():
             try:
-                amount_value = int(amount)
+                amount_value = parse_amount(form.amount.data)
             except ValueError:
                 flash('금액을 숫자로 입력해주세요.', 'danger')
             else:
-                new_guest = Guest(name=name, side=side, amount=amount_value, note=note)
-                db.session.add(new_guest)
-                db.session.commit()
+                create_guest(name=form.name.data.strip(), side=form.side.data.strip(),
+                             amount_value=amount_value, note=form.note.data or "")
                 flash('축의금이 추가되었습니다.', 'success')
                 return redirect(url_for('guests.list_guests'))
+        else:
+            flash('이름, 소속, 금액은 필수이며 금액은 0 이상이어야 합니다.', 'danger')
 
-    search_name = request.args.get('search_name', '').strip()
-    sort_by, order, order_clause = _sorting_from_request(request.args)
-    search_filter = _search_filter(search_name)  # 검색 모달/리스트 전용
-
-    # 메인 화면은 항상 전체 데이터를 기준으로 보여준다.
-    groom_guests = _fetch_guests('groom', order_clause, search_filter=None)
-    bride_guests = _fetch_guests('bride', order_clause, search_filter=None)
-    groom_total, bride_total = _totals(search_filter=None)
-
-    # 검색 결과만 모달/최근 리스트에 사용
-    search_results = (
-        Guest.query.filter(search_filter).order_by(order_clause, Guest.id).all()
-        if search_filter is not None else []
-    )
-
-    return render_template(
-        'guests.html',
-        groom_guests=groom_guests,
-        bride_guests=bride_guests,
-        groom_total=groom_total,
-        bride_total=bride_total,
-        search_name=search_name,
-        sort_by=sort_by,
-        order=order,
-        search_results=search_results,
-        highlight_threshold=HIGHLIGHT_THRESHOLD
-    )
+    context = build_guest_page_context(request.args)
+    context['highlight_threshold'] = HIGHLIGHT_THRESHOLD
+    context['form'] = form
+    return render_template('guests.html', **context)
 
 
 @guests_bp.route('/<int:guest_id>/edit', methods=['GET', 'POST'])

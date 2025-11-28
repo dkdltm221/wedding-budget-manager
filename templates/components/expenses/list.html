@@ -1,0 +1,78 @@
+<div class="card shadow-sm border-0 rounded-3 h-100">
+    <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="card-title mb-0">
+                <i class="bi bi-list-ul me-2"></i>지출 내역
+            </h5>
+            <span class="text-muted small">최근 입력 순으로 정렬됩니다.</span>
+        </div>
+    </div>
+
+    <div class="card-body pt-0">
+        <div class="table-responsive mt-3">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center" style="width: 5%;">#</th>
+                        <th style="width: 20%;">항목</th>
+                        <th>설명</th>
+                        <th class="text-end" style="width: 18%;">금액(원)</th>
+                        <th class="text-center" style="width: 9%;">수정</th>
+                        <th class="text-center" style="width: 8%;">삭제</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expense in expenses %}
+                        <tr>
+                            <td class="text-center text-muted small">
+                                {{ loop.index }}
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill bg-soft-primary text-primary">
+                                    {{ expense.category }}
+                                </span>
+                            </td>
+                            <td class="text-muted">
+                                {{ expense.description or '-' }}
+                            </td>
+                            <td class="text-end fw-semibold">
+                                {{ "{:,}".format(expense.amount) }}
+                            </td>
+                            <td class="text-center">
+                                <a href="{{ url_for('expenses.edit_expense', expense_id=expense.id) }}"
+                                   class="btn btn-sm btn-outline-secondary rounded-circle"
+                                   title="수정">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </td>
+                            <td class="text-center">
+                                <form method="post"
+                                      action="{{ url_for('expenses.delete_expense', expense_id=expense.id) }}"
+                                      data-confirm="정말 삭제할까요?">
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-danger rounded-circle"
+                                            title="삭제">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                아직 등록된 지출이 없습니다. 왼쪽에서 첫 지출을 입력해보세요.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card-footer bg-white border-0 d-md-none">
+        <div class="d-flex justify-content-between align-items-center">
+            <span class="text-muted small">총 지출</span>
+            <strong>{{ "{:,}".format(total_expense) }} 원</strong>
+        </div>
+    </div>
+</div>
