@@ -3,22 +3,15 @@
 Flask + SQLite 기반의 예산/축의금 관리 웹앱입니다. 축의금(신랑/신부 측)과 지출을 기록·검색·통계로 확인할 수 있습니다.
 
 ## 1. 실행 방법
-1) Python 3.10+ 설치  
-2) 가상환경 생성  
-```bash
-python -m venv .venv
-.venv\Scripts\activate       # Windows
-source .venv/bin/activate   # macOS/Linux
-```
-3) 패키지 설치  
+1) 패키지 설치  
 ```bash
 pip install -r requirements.txt
 ```
-4) DB 초기화 & 실행  
+2) DB 초기화 & 실행  
 ```bash
 python app.py   # 첫 실행 시 DB 자동 생성
 ```
-5) 접속  
+3) 접속  
 ```
 http://localhost:5000
 ```
