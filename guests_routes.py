@@ -187,7 +187,7 @@ def _font_path() -> Optional[str]:
 @guests_bp.route('/export/pdf')
 def export_pdf():
     """총합/차액과 전체·측별 Top 5를 PDF로 요약한다."""
-    groom_total, bride_total = _totals()
+    groom_total, bride_total = totals()
     total = groom_total + bride_total
     diff = groom_total - bride_total
     top_all = Guest.query.order_by(Guest.amount.desc()).limit(5).all()
